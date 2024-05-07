@@ -24,6 +24,7 @@ export interface BroadcastInfo {
 }
 
 export type setRestricted = (chatId: number, type: /*Users: */ 'block' | 'deactivated' | /*Groups: */ 'banned' | 'restricted') => Promise<void>
+export type progressCallback = (id: string, sent: number, error: number, total: number) => void;
 
 export interface BroadcastOptions {
     // we use redis because of fast and easy to use for pause and stop the broadcast
@@ -32,7 +33,7 @@ export interface BroadcastOptions {
     // we need a callback for getting chats
     getBroadcastChats: getBroadcastChats,
     // set chat restricted
-    setRestricted?: setRestricted,
+    setRestricted?: setRestricted | null,
     // how much user we fetch user in each db query (lower values more queries to database but better control on the broadcast shutdown's or pause and stop)
     chunkSize?: number,
     // redis key prefix
@@ -42,5 +43,5 @@ export interface BroadcastOptions {
     // in case of using worker or cluster if its main instance pass true to init queue in this instance
     isMainInstance: boolean,
     reportFrequency?: number,
-    progressCallback?: (id: string, sent: number, error: number, total: number) => void
+    progressCallback?: progressCallback | null
 }

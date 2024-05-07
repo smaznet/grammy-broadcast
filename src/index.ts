@@ -1,8 +1,8 @@
 import {Bot} from "grammy";
-import {BroadcastOptions, Defaults} from "./src/types";
+import {BroadcastOptions, Defaults} from "./types";
 
-import {getMiddleware} from "./src/middleware";
-import {BroadcastQueue} from "./src/broadcast.queue";
+import {getMiddleware} from "./middleware";
+import {BroadcastQueue} from "./broadcast.queue";
 
 const defaultOptions: Defaults<BroadcastOptions> = {
     chunkSize: 100,

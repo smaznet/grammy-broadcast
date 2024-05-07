@@ -2,12 +2,21 @@
   "name": "broadcast",
   "version": "1.0.1",
   "description": "A package for sending broadcast to chats using grammy",
-  "main": "index.js",
+  "main": "./dist/index.js",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
   "author": "Aria <smaznet98@gmail.com>",
   "license": "MIT",
-  "devDependencies": {
-    "@types/ioredis": "^5.0.0",
+  "peerDependencies": {
     "grammy": "^1.22.4",
     "ioredis": "^5.4.1"
+  },
+  "devDependencies": {
+    "@types/ioredis": "^5.0.0",
+    "tsup": "^8.0.2",
+    "typescript": "^5.4.5"
   }
 }

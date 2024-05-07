@@ -1,5 +1,5 @@
 import {Bot} from "grammy";
-import {initBroadcaster} from "../index";
+import {initBroadcaster} from "../src";
 import Redis from 'ioredis'
 
 let bot = new Bot("") // TOKEN HERE

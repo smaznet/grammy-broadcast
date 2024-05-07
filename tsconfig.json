@@ -3,6 +3,14 @@
     "lib": [
       "Es2022",
       "dom"
-    ]
-  }
+    ],
+    "moduleResolution": "Node",
+    "module": "commonjs",
+    "strict": true,
+    "declaration": true,
+    "rootDir": "./src/"
+  },
+  "include": [
+    "src/"
+  ]
 }
