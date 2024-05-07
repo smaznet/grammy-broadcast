@@ -13,13 +13,13 @@ const defaultOptions: Defaults<BroadcastOptions> = {
 }
 
 export function initBroadcaster(bot: Bot, options: Omit<BroadcastOptions, 'api'>) {
-    let allOptions = {
+    const allOptions = {
         api: bot.api,
         ...defaultOptions,
         ...options
     }
     if (options.isMainInstance) {
-        let queue = new BroadcastQueue(allOptions);
+        const queue = new BroadcastQueue(allOptions);
         queue.checkBroadcasts().then(() => {
         });
     }

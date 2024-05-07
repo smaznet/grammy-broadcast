@@ -10,7 +10,7 @@ export function getMiddleware(options: BroadcastOptions) {
         return false;
     });
     broadcastMiddleware.command('bbroadcast', async (ctx, next) => {
-        let args = ctx.message.text.split(' ').slice(1);
+        let args = ctx.message!.text.split(' ').slice(1);
         if (args.length < 1) {
             return ctx.reply(`Usage: /bbroadcast <type> [filter]
 
@@ -22,16 +22,16 @@ export function getMiddleware(options: BroadcastOptions) {
         }
         let brdId = Math.random().toString(36).substring(7);
         let type = args[0];
-        if (!ctx.message.reply_to_message) {
+        if (!ctx.message!.reply_to_message) {
             return ctx.reply('Reply to a message')
         }
         await options.redisInstance.hset(options.keyPrefix + 'info:' + brdId, {
             type: type,
             chatFilter: args[1],
 
-            message_ids: ctx.message.reply_to_message?.message_id.toString(),
+            message_ids: ctx.message!.reply_to_message?.message_id.toString(),
             chat_id: ctx.chat.id.toString(),
-            user_id: ctx.from.id,
+            user_id: ctx.from!.id,
 
         });
         return ctx.reply(`
@@ -50,17 +50,17 @@ for send multi message in this broadcast reply this command to another message
     })
 
     broadcastMiddleware.command('badd', async (ctx, next) => {
-        let args = ctx.message.text.split(' ').slice(1);
+        let args = ctx.message!.text.split(' ').slice(1);
         if (args.length < 1) {
             return ctx.reply(`Usage: /badd <id>`)
         }
         let brdId = args[0];
-        if (!ctx.message.reply_to_message) {
+        if (!ctx.message!.reply_to_message) {
             return ctx.reply('Reply to a message')
         }
-        let newMsgId = ctx.message.reply_to_message?.message_id;
+        let newMsgId = ctx.message!.reply_to_message?.message_id;
         let messageIds = await options.redisInstance.hget(options.keyPrefix + 'info:' + brdId, 'message_ids');
-        let currentIds = messageIds.split('_').map((e) => Number.parseInt(e));
+        let currentIds = messageIds.split('_').map((e: string) => Number.parseInt(e));
         if (Math.max(newMsgId, ...currentIds) !== newMsgId) {
             return ctx.reply('Message should be newer than previous messages')
         }
@@ -80,7 +80,7 @@ for send multi message in this broadcast reply this command to another message
 
     function redirectCommand(cmd: string) {
         broadcastMiddleware.command(cmd, (ctx, next) => {
-            ctx.message.text = ctx.message.text.replace(cmd, `/bbroadcast ${cmd.substring(1)}`)
+            ctx.message!.text = ctx.message!.text.replace(cmd, `/bbroadcast ${cmd.substring(1)}`)
             broadcastMiddleware.middleware()(ctx, next)
         })
     }
@@ -119,7 +119,7 @@ for send multi message in this broadcast reply this command to another message
     });
     broadcastMiddleware.callbackQuery(/brd:preview:(\w+)/, async (ctx) => {
         let info = await options.redisInstance.hgetall(options.keyPrefix + 'info:' + ctx.match[1]);
-        let messageIds = info.message_ids.split('_').map((e) => Number.parseInt(e));
+        let messageIds = info.message_ids.split('_').map((e: string) => Number.parseInt(e));
         if (info.type === 'copy') {
             return ctx.copyMessages(info.chat_id, messageIds)
         } else if (info.type === 'forward') {
