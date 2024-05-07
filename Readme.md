@@ -5,6 +5,11 @@ This plugin allows you to broadcast messages to all chats ([super]?group/channel
 just write this in your bot.ts
 
 ```typescript
+import Redis from 'ioredis'
+
+let bot = new Bot("") // TOKEN HERE
+let redis = new Redis()
+
 initBroadcaster(bot, {
     redisInstance: redis,
     isMainInstance: true, // for clusters and multiple instances set true on main instances
