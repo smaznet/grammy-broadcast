@@ -1,0 +1,13 @@
+{
+  "name": "broadcast",
+  "version": "1.0.0",
+  "description": "A package for sending broadcast to chats using grammy",
+  "main": "index.js",
+  "author": "Aria <smaznet98@gmail.com>",
+  "license": "MIT",
+  "devDependencies": {
+    "@types/ioredis": "^5.0.0",
+    "grammy": "^1.22.4",
+    "ioredis": "^5.4.1"
+  }
+}
