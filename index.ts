@@ -1,17 +1,29 @@
 import {Bot} from "grammy";
-import {BroadcastOptions} from "./src/types";
-import Broadcast from "./src/broadcast";
-import {broadcastMiddleware} from "./src/middleware";
+import {BroadcastOptions, Defaults} from "./src/types";
+
+import {getMiddleware} from "./src/middleware";
+import {BroadcastQueue} from "./src/broadcast.queue";
+
+const defaultOptions: Defaults<BroadcastOptions> = {
+    chunkSize: 100,
+    keyPrefix: 'brdc:',
+    reportFrequency: 60 * 1000,
+    progressCallback: null,
+    setRestricted: null,
+}
 
 export function initBroadcaster(bot: Bot, options: Omit<BroadcastOptions, 'api'>) {
-    let broadcast = new Broadcast({
+    let allOptions = {
         api: bot.api,
+        ...defaultOptions,
         ...options
-    });
+    }
     if (options.isMainInstance) {
-        broadcast.initQueue();
+        let queue = new BroadcastQueue(allOptions);
+        queue.checkBroadcasts().then(() => {
+        });
     }
 
-    bot.use(broadcastMiddleware);
+    bot.use(getMiddleware(allOptions));
 
 }

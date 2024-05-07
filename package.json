@@ -1,6 +1,6 @@
 {
   "name": "broadcast",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "A package for sending broadcast to chats using grammy",
   "main": "index.js",
   "author": "Aria <smaznet98@gmail.com>",
