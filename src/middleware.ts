@@ -9,7 +9,7 @@ export function getMiddleware(options: BroadcastOptions) {
         }
         return false;
     });
-    broadcastMiddleware.command([options.cmds.broadcast, options.cmds.copy, options.cmds.forward], async (ctx, next) => {
+    broadcastMiddleware.command([options.cmds.broadcast, options.cmds.copy, options.cmds.forward], async (ctx) => {
         let [command, ...args] = ctx.message!.text.substring(1).split(' ');
         let type: string;
         let filter: string;
@@ -67,7 +67,7 @@ for send multi message in this broadcast reply this command to another message
         })
     })
 
-    broadcastMiddleware.command(options.cmds.addmsg, async (ctx, next) => {
+    broadcastMiddleware.command(options.cmds.addmsg, async (ctx) => {
         let args = ctx.message!.text.split(' ').slice(1);
         if (args.length < 1) {
             return ctx.reply(`Usage: /${options.cmds.addmsg} <id>`)
