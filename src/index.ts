@@ -10,11 +10,21 @@ const defaultOptions: Defaults<BroadcastOptions> = {
     reportFrequency: 60 * 1000,
     progressCallback: null,
     setRestricted: null,
+    cmds: {
+        broadcast: 'broadcast',
+        copy: 'copy',
+        forward: 'forward',
+        addmsg: 'addmsg'
+    }
 }
 
 export function initBroadcaster(bot: Bot, options: Omit<BroadcastOptions, 'api'>) {
     const allOptions = {
         api: bot.api,
+        cmds: {
+            ...defaultOptions.cmds,
+            ...options.cmds
+        },
         ...defaultOptions,
         ...options
     }

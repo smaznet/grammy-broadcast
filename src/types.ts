@@ -43,5 +43,11 @@ export interface BroadcastOptions {
     // in case of using worker or cluster if its main instance pass true to init queue in this instance
     isMainInstance: boolean,
     reportFrequency?: number,
-    progressCallback?: progressCallback | null
+    progressCallback?: progressCallback | null,
+    cmds?: {
+        broadcast?: string,
+        copy?: string,
+        forward?: string,
+        addmsg?: string,
+    }
 }

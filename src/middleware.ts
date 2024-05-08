@@ -9,7 +9,7 @@ export function getMiddleware(options: BroadcastOptions) {
         }
         return false;
     });
-    broadcastMiddleware.command('bbroadcast', async (ctx, next) => {
+    broadcastMiddleware.command(options.cmds.broadcast, async (ctx, next) => {
         let args = ctx.message!.text.split(' ').slice(1);
         if (args.length < 1) {
             return ctx.reply(`Usage: /bbroadcast <type> [filter]
@@ -38,7 +38,7 @@ export function getMiddleware(options: BroadcastOptions) {
 Ready to broadcast!
 currently 1 message is in queue
 for send multi message in this broadcast reply this command to another message
-<code>/badd ${brdId}</code>
+<code>/${options.cmds.addmsg} ${brdId}</code>
 `, {
             parse_mode: "HTML",
             reply_markup: new InlineKeyboard()
@@ -49,10 +49,10 @@ for send multi message in this broadcast reply this command to another message
         })
     })
 
-    broadcastMiddleware.command('badd', async (ctx, next) => {
+    broadcastMiddleware.command(options.cmds.addmsg, async (ctx, next) => {
         let args = ctx.message!.text.split(' ').slice(1);
         if (args.length < 1) {
-            return ctx.reply(`Usage: /badd <id>`)
+            return ctx.reply(`Usage: /${options.cmds.addmsg} <id>`)
         }
         let brdId = args[0];
         if (!ctx.message!.reply_to_message) {
@@ -80,13 +80,13 @@ for send multi message in this broadcast reply this command to another message
 
     function redirectCommand(cmd: string) {
         broadcastMiddleware.command(cmd, (ctx, next) => {
-            ctx.message!.text = ctx.message!.text.replace(cmd, `/bbroadcast ${cmd.substring(1)}`)
+            ctx.message!.text = ctx.message!.text.replace(`/${cmd}`, `/${options.cmds.broadcast} ${cmd.substring(1)}`)
             broadcastMiddleware.middleware()(ctx, next)
         })
     }
 
 // aliases
-    ['bcopy', 'bforward'].map(redirectCommand)
+    [options.cmds.copy, options.cmds.forward].map(redirectCommand)
 
 
     broadcastMiddleware.callbackQuery(/brd:progress:(\w+)/, async (ctx) => {
