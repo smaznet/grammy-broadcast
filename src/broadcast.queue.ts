@@ -21,7 +21,7 @@ export class BroadcastQueue {
                 await this.sendBroadcast(broadcastId,);
             }
         }
-        setTimeout(this.checkBroadcasts, 60000);
+        setTimeout(this.checkBroadcasts.bind(this), 60000);
 
     }
 

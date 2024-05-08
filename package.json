@@ -1,6 +1,6 @@
 {
   "name": "grammy-broadcast",
-  "version": "1.0.22",
+  "version": "1.0.23",
   "description": "A package for sending broadcast to chats using grammy",
   "main": "./dist/index.js",
   "module": "./dist/index.mjs",
