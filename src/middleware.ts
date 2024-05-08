@@ -87,7 +87,9 @@ for send multi message in this broadcast reply this command to another message
         }
         currentIds.push(newMsgId);
         await options.redisInstance.hset(options.keyPrefix + 'info:' + brdId, 'message_ids', currentIds.join('_'));
-        return ctx.reply('Message added to queue', {
+        return ctx.reply(`Message added to queue
+
+Messages Count ${currentIds.length}`, {
             reply_markup: new InlineKeyboard()
                 .text('Preview', 'brd:preview:' + brdId)
                 .row()
@@ -109,7 +111,7 @@ for send multi message in this broadcast reply this command to another message
     });
     broadcastMiddleware.callbackQuery(/brd:pause:(\w+)/, async (ctx) => {
         await options.redisInstance.hset(options.keyPrefix + 'info:' + ctx.match[1], 'paused', '1');
-        return ctx.editMessageReplyMarkup({
+        return ctx.editMessageText('Broadcast paused!', {
             reply_markup: new InlineKeyboard()
 
                 .text('Resume', 'brd:resume:' + ctx.match[1])
@@ -119,11 +121,12 @@ for send multi message in this broadcast reply this command to another message
     });
     broadcastMiddleware.callbackQuery(/brd:resume:(\w+)/, async (ctx) => {
         await options.redisInstance.hdel(options.keyPrefix + 'info:' + ctx.match[1], 'paused');
-        return ctx.editMessageReplyMarkup({
-            reply_markup: new InlineKeyboard()
-                .text('Pause', 'brd:pause:' + ctx.match[1])
-                .text('Stop', 'brd:stop:' + ctx.match[1])
-        });
+        return ctx.editMessageText(
+            "Lets begin...", {
+                reply_markup: new InlineKeyboard()
+                    .text('Pause', 'brd:pause:' + ctx.match[1])
+                    .text('Stop', 'brd:stop:' + ctx.match[1])
+            });
     });
     broadcastMiddleware.callbackQuery(/brd:preview:(\w+)/, async (ctx) => {
         let info = await options.redisInstance.hgetall(options.keyPrefix + 'info:' + ctx.match[1]);
@@ -137,7 +140,7 @@ for send multi message in this broadcast reply this command to another message
     broadcastMiddleware.callbackQuery(/brd:start:(\w+)/, async (ctx) => {
         let id = ctx.match[1];
         await options.redisInstance.rpush(options.keyPrefix + 'list', id);
-        return ctx.editMessageReplyMarkup({
+        return ctx.editMessageText(`Broadcast added to queue it takes some time to start...`, {
             reply_markup: new InlineKeyboard()
                 .text('Pause', 'brd:pause:' + id)
                 .text('Stop', 'brd:stop:' + id)
