@@ -27,7 +27,7 @@ function getMiddleware(options) {
     }
     return false;
   });
-  broadcastMiddleware.command([options.cmds.broadcast, options.cmds.copy, options.cmds.forward], async (ctx, next) => {
+  broadcastMiddleware.command([options.cmds.broadcast, options.cmds.copy, options.cmds.forward], async (ctx) => {
     var _a;
     let [command, ...args] = ctx.message.text.substring(1).split(" ");
     let type;
@@ -79,7 +79,7 @@ for send multi message in this broadcast reply this command to another message
       reply_markup: new InlineKeyboard().text("Preview", "brd:preview:" + brdId).row().text("Start", "brd:start:" + brdId).text("Cancel", "brd:stop:" + brdId)
     });
   });
-  broadcastMiddleware.command(options.cmds.addmsg, async (ctx, next) => {
+  broadcastMiddleware.command(options.cmds.addmsg, async (ctx) => {
     var _a;
     let args = ctx.message.text.split(" ").slice(1);
     if (args.length < 1) {
