@@ -10,6 +10,7 @@ const defaultOptions: Defaults<BroadcastOptions> = {
     reportFrequency: 60 * 1000,
     progressCallback: null,
     setRestricted: null,
+    checkQueueInterval: 60 * 1000,
     cmds: {
         broadcast: 'broadcast',
         copy: 'copy',

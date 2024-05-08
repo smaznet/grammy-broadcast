@@ -9,30 +9,48 @@ export function getMiddleware(options: BroadcastOptions) {
         }
         return false;
     });
-    broadcastMiddleware.command(options.cmds.broadcast, async (ctx, next) => {
-        let args = ctx.message!.text.split(' ').slice(1);
-        if (args.length < 1) {
-            return ctx.reply(`Usage: /bbroadcast <type> [filter]
+    broadcastMiddleware.command([options.cmds.broadcast, options.cmds.copy, options.cmds.forward], async (ctx, next) => {
+        let [command, ...args] = ctx.message!.text.substring(1).split(' ');
+        let type: string;
+        let filter: string;
+        if (command === options.cmds.broadcast) {
+            if (args.length < 1) {
+                return ctx.reply(`Usage: /${options.cmds.broadcast} <type> [filter]
 
-<code>type</code> should be copy or forward
-<code>filter</code> is anything that want to passed to getBroadcastChats
+\`type\` should be copy or forward
+\`filter\` is anything that want to passed to getBroadcastChats
 `, {
-                parse_mode: "HTML",
-            })
+                    parse_mode: "Markdown",
+                })
+            }
+            type = args[0];
+            filter = args.slice(1).join(' ')
+        } else if (command === options.cmds.copy) {
+            type = 'copy';
+            filter = args.join(' ')
+        } else if (command === options.cmds.forward) {
+            type = 'forward';
+            filter = args.join(' ')
         }
+
+        if (!['copy', 'forward'].includes(type)) {
+            return ctx.reply(`Invalid type ${type}`)
+        }
+
         let brdId = Math.random().toString(36).substring(7);
-        let type = args[0];
         if (!ctx.message!.reply_to_message) {
             return ctx.reply('Reply to a message')
         }
         await options.redisInstance.hset(options.keyPrefix + 'info:' + brdId, {
             type: type,
-            chatFilter: args[1],
-
+            chatFilter: filter,
             message_ids: ctx.message!.reply_to_message?.message_id.toString(),
             chat_id: ctx.chat.id.toString(),
             user_id: ctx.from!.id,
-
+            id: brdId,
+            error: '0',
+            sent: '0',
+            total: '-1'
         });
         return ctx.reply(`
 Ready to broadcast!
@@ -77,16 +95,6 @@ for send multi message in this broadcast reply this command to another message
                 .text('Cancel', 'brd:stop:' + brdId)
         })
     });
-
-    function redirectCommand(cmd: string) {
-        broadcastMiddleware.command(cmd, (ctx, next) => {
-            ctx.message!.text = ctx.message!.text.replace(`/${cmd}`, `/${options.cmds.broadcast} ${cmd.substring(1)}`)
-            broadcastMiddleware.middleware()(ctx, next)
-        })
-    }
-
-// aliases
-    [options.cmds.copy, options.cmds.forward].map(redirectCommand)
 
 
     broadcastMiddleware.callbackQuery(/brd:progress:(\w+)/, async (ctx) => {
@@ -138,6 +146,7 @@ for send multi message in this broadcast reply this command to another message
     broadcastMiddleware.callbackQuery(/brd:stop:(\w+)/, async (ctx) => {
         return ctx.editMessageReplyMarkup({
             reply_markup: new InlineKeyboard().text('Sure?')
+                .row()
                 .text('Yes', 'brd:stop_confirm:' + ctx.match[1])
                 .text('No', `brd:stop_cancel:${ctx.match[1]}`)
         });

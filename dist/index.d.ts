@@ -14,6 +14,7 @@ interface BroadcastOptions {
     sudoUsers: number[];
     isMainInstance: boolean;
     reportFrequency?: number;
+    checkQueueInterval?: number;
     progressCallback?: progressCallback | null;
     cmds?: {
         broadcast?: string;

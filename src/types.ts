@@ -43,6 +43,7 @@ export interface BroadcastOptions {
     // in case of using worker or cluster if its main instance pass true to init queue in this instance
     isMainInstance: boolean,
     reportFrequency?: number,
+    checkQueueInterval?: number,
     progressCallback?: progressCallback | null,
     cmds?: {
         broadcast?: string,

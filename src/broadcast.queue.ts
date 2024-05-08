@@ -21,13 +21,14 @@ export class BroadcastQueue {
                 await this.sendBroadcast(broadcastId,);
             }
         }
-        setTimeout(this.checkBroadcasts.bind(this), 60000);
+        setTimeout(this.checkBroadcasts.bind(this), this.options.checkQueueInterval);
 
     }
 
     async sendBroadcast(id: string) {
         let broadcastInfo = await this.options.redisInstance.hgetall(this.options.keyPrefix + 'info:' + id) as unknown as BroadcastInfo;
-        if (!broadcastInfo.total || broadcastInfo.total !== '0') {
+        if (broadcastInfo.total === '-1') {
+            console.log("fetching chats")
             let fetcher = new ChatsFetcher(this.options);
             await fetcher.fetchChats(broadcastInfo);
         }
@@ -39,8 +40,7 @@ export class BroadcastQueue {
 
         if (broadcastInfo.paused) return;
 
-        if (chats!.length === 0) {
-
+        if (!chats?.length) {
             await this.options.redisInstance.del(this.options.keyPrefix + 'chats:' + id);
             await this.options.redisInstance.del(this.options.keyPrefix + 'info:' + id);
             await this.options.redisInstance.lrem(this.options.keyPrefix + 'list', 1, id);
@@ -88,6 +88,7 @@ export class BroadcastQueue {
         if (finished) {
             await this.options.api.sendMessage(broadcastInfo.chat_id, `✅ Broadcast finished
 ${progressText}`);
+            return;
         }
         let msgId = this.reportIds[broadcastInfo.id];
         if (!msgId) {

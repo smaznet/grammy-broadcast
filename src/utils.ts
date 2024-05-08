@@ -7,7 +7,7 @@ export function sleep(milli: number) {
 export function buildProgressBtnText(percent: number, chars: number = 10) {
     let progress = Math.floor(percent * chars);
     let empty = chars - progress;
-    return '⬛'.repeat(progress) + '⬜'.repeat(empty) + ` (${Math.floor(percent * 1000) / 10}%)`;
+    return '█'.repeat(progress) + '░'.repeat(empty) + ` (${Math.floor(percent * 1000) / 10}%)`;
 }
 export function buildProgressText(error: number,sent: number,total: number){
     return `⌛ Progress: ${error + (sent)}/${total}

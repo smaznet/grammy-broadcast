@@ -10,7 +10,7 @@ function sleep(milli) {
 function buildProgressBtnText(percent, chars = 10) {
   let progress = Math.floor(percent * chars);
   let empty = chars - progress;
-  return "\u2B1B".repeat(progress) + "\u2B1C".repeat(empty) + ` (${Math.floor(percent * 1e3) / 10}%)`;
+  return "\u2588".repeat(progress) + "\u2591".repeat(empty) + ` (${Math.floor(percent * 1e3) / 10}%)`;
 }
 function buildProgressText(error, sent, total) {
   return `\u231B Progress: ${error + sent}/${total}
@@ -27,29 +27,47 @@ function getMiddleware(options) {
     }
     return false;
   });
-  broadcastMiddleware.command(options.cmds.broadcast, async (ctx, next) => {
+  broadcastMiddleware.command([options.cmds.broadcast, options.cmds.copy, options.cmds.forward], async (ctx, next) => {
     var _a;
-    let args = ctx.message.text.split(" ").slice(1);
-    if (args.length < 1) {
-      return ctx.reply(`Usage: /bbroadcast <type> [filter]
+    let [command, ...args] = ctx.message.text.substring(1).split(" ");
+    let type;
+    let filter;
+    if (command === options.cmds.broadcast) {
+      if (args.length < 1) {
+        return ctx.reply(`Usage: /${options.cmds.broadcast} <type> [filter]
 
-<code>type</code> should be copy or forward
-<code>filter</code> is anything that want to passed to getBroadcastChats
+\`type\` should be copy or forward
+\`filter\` is anything that want to passed to getBroadcastChats
 `, {
-        parse_mode: "HTML"
-      });
+          parse_mode: "Markdown"
+        });
+      }
+      type = args[0];
+      filter = args.slice(1).join(" ");
+    } else if (command === options.cmds.copy) {
+      type = "copy";
+      filter = args.join(" ");
+    } else if (command === options.cmds.forward) {
+      type = "forward";
+      filter = args.join(" ");
+    }
+    if (!["copy", "forward"].includes(type)) {
+      return ctx.reply(`Invalid type ${type}`);
     }
     let brdId = Math.random().toString(36).substring(7);
-    let type = args[0];
     if (!ctx.message.reply_to_message) {
       return ctx.reply("Reply to a message");
     }
     await options.redisInstance.hset(options.keyPrefix + "info:" + brdId, {
       type,
-      chatFilter: args[1],
+      chatFilter: filter,
       message_ids: (_a = ctx.message.reply_to_message) == null ? void 0 : _a.message_id.toString(),
       chat_id: ctx.chat.id.toString(),
-      user_id: ctx.from.id
+      user_id: ctx.from.id,
+      id: brdId,
+      error: "0",
+      sent: "0",
+      total: "-1"
     });
     return ctx.reply(`
 Ready to broadcast!
@@ -86,13 +104,6 @@ for send multi message in this broadcast reply this command to another message
       reply_markup: new (0, _grammy.InlineKeyboard)().text("Preview", "brd:preview:" + brdId).row().text("Start", "brd:start:" + brdId).text("Cancel", "brd:stop:" + brdId)
     });
   });
-  function redirectCommand(cmd) {
-    broadcastMiddleware.command(cmd, (ctx, next) => {
-      ctx.message.text = ctx.message.text.replace(`/${cmd}`, `/${options.cmds.broadcast} ${cmd.substring(1)}`);
-      broadcastMiddleware.middleware()(ctx, next);
-    });
-  }
-  [options.cmds.copy, options.cmds.forward].map(redirectCommand);
   broadcastMiddleware.callbackQuery(/brd:progress:(\w+)/, async (ctx) => {
     let info = await options.redisInstance.hgetall(options.keyPrefix + "info:" + ctx.match[1]);
     return ctx.answerCallbackQuery(
@@ -132,7 +143,7 @@ for send multi message in this broadcast reply this command to another message
   });
   broadcastMiddleware.callbackQuery(/brd:stop:(\w+)/, async (ctx) => {
     return ctx.editMessageReplyMarkup({
-      reply_markup: new (0, _grammy.InlineKeyboard)().text("Sure?").text("Yes", "brd:stop_confirm:" + ctx.match[1]).text("No", `brd:stop_cancel:${ctx.match[1]}`)
+      reply_markup: new (0, _grammy.InlineKeyboard)().text("Sure?").row().text("Yes", "brd:stop_confirm:" + ctx.match[1]).text("No", `brd:stop_cancel:${ctx.match[1]}`)
     });
   });
   broadcastMiddleware.callbackQuery(/brd:stop_cancel/, async (ctx) => {
@@ -167,8 +178,11 @@ var ChatsFetcher = class {
       await this.options.redisInstance.rpush(this.options.keyPrefix + "chats:" + broadcast.id, ...chatIds);
       if (chatIds.length < this.options.chunkSize) {
         await this.options.redisInstance.hset(this.options.keyPrefix + "info:" + broadcast.id, "total", chatOffset + chatIds.length);
+        broadcast.total = (chatOffset + chatIds.length).toString();
         break;
       }
+      chatOffset += chatIds.length;
+      await this.options.redisInstance.hset(this.options.keyPrefix + "info:" + broadcast.id, "chatOffset", chatOffset.toString());
     }
   }
 };
@@ -188,11 +202,12 @@ var BroadcastQueue = (_class = class {
         await this.sendBroadcast(broadcastId);
       }
     }
-    setTimeout(this.checkBroadcasts.bind(this), 6e4);
+    setTimeout(this.checkBroadcasts.bind(this), this.options.checkQueueInterval);
   }
   async sendBroadcast(id) {
     let broadcastInfo = await this.options.redisInstance.hgetall(this.options.keyPrefix + "info:" + id);
-    if (!broadcastInfo.total || broadcastInfo.total !== "0") {
+    if (broadcastInfo.total === "-1") {
+      console.log("fetching chats");
       let fetcher = new ChatsFetcher(this.options);
       await fetcher.fetchChats(broadcastInfo);
     }
@@ -203,7 +218,7 @@ var BroadcastQueue = (_class = class {
     let chats = await this.options.redisInstance.lpop(this.options.keyPrefix + "chats:" + id, this.options.chunkSize);
     if (broadcastInfo.paused)
       return;
-    if (chats.length === 0) {
+    if (!(chats == null ? void 0 : chats.length)) {
       await this.options.redisInstance.del(this.options.keyPrefix + "chats:" + id);
       await this.options.redisInstance.del(this.options.keyPrefix + "info:" + id);
       await this.options.redisInstance.lrem(this.options.keyPrefix + "list", 1, id);
@@ -242,6 +257,7 @@ var BroadcastQueue = (_class = class {
     if (finished) {
       await this.options.api.sendMessage(broadcastInfo.chat_id, `\u2705 Broadcast finished
 ${progressText}`);
+      return;
     }
     let msgId = this.reportIds[broadcastInfo.id];
     if (!msgId) {
@@ -323,6 +339,7 @@ var defaultOptions = {
   reportFrequency: 60 * 1e3,
   progressCallback: null,
   setRestricted: null,
+  checkQueueInterval: 60 * 1e3,
   cmds: {
     broadcast: "broadcast",
     copy: "copy",
