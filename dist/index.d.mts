@@ -15,6 +15,12 @@ interface BroadcastOptions {
     isMainInstance: boolean;
     reportFrequency?: number;
     progressCallback?: progressCallback | null;
+    cmds?: {
+        broadcast?: string;
+        copy?: string;
+        forward?: string;
+        addmsg?: string;
+    };
 }
 
 declare function initBroadcaster(bot: Bot, options: Omit<BroadcastOptions, 'api'>): void;
