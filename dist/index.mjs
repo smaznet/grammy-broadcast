@@ -10,6 +10,7 @@ function sleep(milli) {
 function buildProgressBtnText(percent, chars = 10) {
   let progress = Math.floor(percent * chars);
   let empty = chars - progress;
+  console.log({ progress, empty });
   return "\u2588".repeat(progress) + "\u2591".repeat(empty) + ` (${Math.floor(percent * 1e3) / 10}%)`;
 }
 function buildProgressText(error, sent, total) {
