@@ -1,4 +1,4 @@
-import { Api, Context, Bot } from 'grammy';
+import { Api, Context, RawApi, Bot } from 'grammy';
 import { Redis } from 'ioredis';
 
 type getBroadcastChats = (offset: number, limit: number, filter?: string) => Promise<string[] | number[]>;
@@ -26,6 +26,6 @@ interface BroadcastOptions {
     };
 }
 
-declare function initBroadcaster(bot: Bot, options: Omit<BroadcastOptions, 'api'>): void;
+declare function initBroadcaster<T extends Context, G extends Api<RawApi>>(bot: Bot<T, G>, options: Omit<BroadcastOptions, 'api'>): void;
 
 export { initBroadcaster };

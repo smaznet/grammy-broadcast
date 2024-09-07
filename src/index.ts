@@ -1,4 +1,4 @@
-import {Api, Bot} from "grammy";
+import {Api, Bot, Context, RawApi} from "grammy";
 import {BroadcastOptions, Defaults} from "./types";
 
 import {getMiddleware} from "./middleware";
@@ -20,7 +20,7 @@ const defaultOptions: Defaults<BroadcastOptions> = {
     }
 }
 
-export function initBroadcaster(bot: Bot, options: Omit<BroadcastOptions, 'api'>) {
+export function initBroadcaster<T extends Context,G extends Api<RawApi>>(bot: Bot<T,G>, options: Omit<BroadcastOptions, 'api'>) {
     const allOptions = {
         api: bot.api,
         ...defaultOptions,
