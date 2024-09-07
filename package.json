@@ -1,6 +1,6 @@
 {
   "name": "grammy-broadcast",
-  "version": "1.0.25",
+  "version": "1.0.26",
   "description": "A package for sending broadcast to chats using grammy",
   "main": "./dist/index.js",
   "module": "./dist/index.mjs",
@@ -9,7 +9,7 @@
     "dist"
   ],
   "scripts": {
-    "build": "deno2node tsconfig.json"
+    "build": "tsup"
   },
   "author": "Aria <smaznet98@gmail.com>",
   "license": "MIT",

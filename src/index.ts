@@ -1,4 +1,4 @@
-import {Bot} from "grammy";
+import {Api, Bot} from "grammy";
 import {BroadcastOptions, Defaults} from "./types";
 
 import {getMiddleware} from "./middleware";
@@ -19,14 +19,14 @@ const defaultOptions: Defaults<BroadcastOptions> = {
     }
 }
 
-export function initBroadcaster(bot: Bot, options: Omit<BroadcastOptions, 'api'>) {
+export function initBroadcaster(api: Api, options: Omit<BroadcastOptions, 'api'>) {
     const allOptions = {
-        api: bot.api,
+        api: api,
+        ...defaultOptions,
         cmds: {
             ...defaultOptions.cmds,
             ...options.cmds
         },
-        ...defaultOptions,
         ...options
     }
     if (options.isMainInstance) {
@@ -35,6 +35,6 @@ export function initBroadcaster(bot: Bot, options: Omit<BroadcastOptions, 'api'>
         });
     }
 
-    bot.use(getMiddleware(allOptions));
+    return (getMiddleware(allOptions));
 
 }

@@ -20,15 +20,16 @@ function buildProgressText(error, sent, total) {
 
 // src/middleware.ts
 function getMiddleware(options) {
-  const broadcastMiddleware = new (0, _grammy.Composer)().filter((ctx) => {
-    var _a;
-    if ((_a = ctx.from) == null ? void 0 : _a.id) {
+  var _a;
+  const broadcastMiddleware = ((_a = options.sudoUsers) == null ? void 0 : _a.length) ? new (0, _grammy.Composer)().filter((ctx) => {
+    var _a2;
+    if ((_a2 = ctx.from) == null ? void 0 : _a2.id) {
       return options.sudoUsers.includes(ctx.from.id);
     }
     return false;
-  });
+  }) : new (0, _grammy.Composer)();
   broadcastMiddleware.command([options.cmds.broadcast, options.cmds.copy, options.cmds.forward], async (ctx) => {
-    var _a;
+    var _a2;
     let [command, ...args] = ctx.message.text.substring(1).split(" ");
     let type;
     let filter;
@@ -61,7 +62,7 @@ function getMiddleware(options) {
     await options.redisInstance.hset(options.keyPrefix + "info:" + brdId, {
       type,
       chatFilter: filter,
-      message_ids: (_a = ctx.message.reply_to_message) == null ? void 0 : _a.message_id.toString(),
+      message_ids: (_a2 = ctx.message.reply_to_message) == null ? void 0 : _a2.message_id.toString(),
       chat_id: ctx.chat.id.toString(),
       user_id: ctx.from.id,
       id: brdId,
@@ -80,7 +81,7 @@ for send multi message in this broadcast reply this command to another message
     });
   });
   broadcastMiddleware.command(options.cmds.addmsg, async (ctx) => {
-    var _a;
+    var _a2;
     let args = ctx.message.text.split(" ").slice(1);
     if (args.length < 1) {
       return ctx.reply(`Usage: /${options.cmds.addmsg} <id>`);
@@ -89,7 +90,7 @@ for send multi message in this broadcast reply this command to another message
     if (!ctx.message.reply_to_message) {
       return ctx.reply("Reply to a message");
     }
-    let newMsgId = (_a = ctx.message.reply_to_message) == null ? void 0 : _a.message_id;
+    let newMsgId = (_a2 = ctx.message.reply_to_message) == null ? void 0 : _a2.message_id;
     let messageIds = await options.redisInstance.hget(options.keyPrefix + "info:" + brdId, "message_ids");
     let currentIds = messageIds.split("_").map((e) => Number.parseInt(e));
     if (Math.max(newMsgId, ...currentIds) !== newMsgId) {
@@ -352,14 +353,14 @@ var defaultOptions = {
     addmsg: "addmsg"
   }
 };
-function initBroadcaster(bot, options) {
+function initBroadcaster(api, options) {
   const allOptions = {
-    api: bot.api,
+    api,
+    ...defaultOptions,
     cmds: {
       ...defaultOptions.cmds,
       ...options.cmds
     },
-    ...defaultOptions,
     ...options
   };
   if (options.isMainInstance) {
@@ -367,7 +368,7 @@ function initBroadcaster(bot, options) {
     queue.checkBroadcasts().then(() => {
     });
   }
-  bot.use(getMiddleware(allOptions));
+  return getMiddleware(allOptions);
 }
 
 

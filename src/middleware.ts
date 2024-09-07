@@ -3,12 +3,12 @@ import {BroadcastOptions} from "./types";
 import {buildProgressText} from "./utils";
 
 export function getMiddleware(options: BroadcastOptions) {
-    const broadcastMiddleware = new Composer().filter((ctx) => {
+    const broadcastMiddleware = options.sudoUsers?.length ? new Composer().filter((ctx) => {
         if (ctx.from?.id) {
             return options.sudoUsers.includes(ctx.from.id)
         }
         return false;
-    });
+    }) : new Composer();
     broadcastMiddleware.command([options.cmds.broadcast, options.cmds.copy, options.cmds.forward], async (ctx) => {
         let [command, ...args] = ctx.message!.text.substring(1).split(' ');
         let type: string;

@@ -38,7 +38,7 @@ export interface BroadcastOptions {
     chunkSize?: number,
     // redis key prefix
     keyPrefix?: string,
-    // list of sudo users which can use /broadcast command
+    // list of sudo users which can use /broadcast command if its empty you should use your own guard
     sudoUsers: number[],
     // in case of using worker or cluster if its main instance pass true to init queue in this instance
     isMainInstance: boolean,

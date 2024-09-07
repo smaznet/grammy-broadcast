@@ -1,4 +1,5 @@
-import { Api, Bot } from 'grammy';
+import * as grammy from 'grammy';
+import { Api } from 'grammy';
 import { Redis } from 'ioredis';
 
 type getBroadcastChats = (offset: number, limit: number, filter?: string) => Promise<string[] | number[]>;
@@ -24,6 +25,6 @@ interface BroadcastOptions {
     };
 }
 
-declare function initBroadcaster(bot: Bot, options: Omit<BroadcastOptions, 'api'>): void;
+declare function initBroadcaster(api: Api, options: Omit<BroadcastOptions, 'api'>): grammy.Composer<grammy.Context>;
 
 export { initBroadcaster };
