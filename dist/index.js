@@ -380,6 +380,7 @@ var Broadcaster = class _Broadcaster {
     queue.checkBroadcasts().then(() => {
     });
     _Broadcaster._instance = instance;
+    return instance;
   }
   getMiddleware() {
     return getMiddleware(this.options);

@@ -35,6 +35,7 @@ class Broadcaster {
         queue.checkBroadcasts().then(() => {
         });
         Broadcaster._instance = instance;
+        return instance;
     }
 
     getMiddleware() {
