@@ -310,7 +310,7 @@ ${progressText}`, {
       }
       return true;
     } catch (err) {
-      let retry = await this.handleError(chatId, err);
+      let retry = await this.handleError(+broadcastInfo.botId, chatId, err);
       if (retry) {
         await this.sendToChat(chatId, broadcastInfo);
         return true;
@@ -318,11 +318,11 @@ ${progressText}`, {
       return false;
     }
   }
-  async handleError(chatId, error) {
+  async handleError(botId, chatId, error) {
     var _a;
     const message = "description" in error ? error.description : error.message;
     const errorMessage = message.toLowerCase();
-    const setRestricted = ((_a = this.options.setRestricted) == null ? void 0 : _a.bind(null, chatId)) || ((reason) => {
+    const setRestricted = ((_a = this.options.setRestricted) == null ? void 0 : _a.bind(null, botId, chatId)) || ((reason) => {
       console.log(`ChatId: ${chatId} is restricted for reason: ${reason} you didn't handled this error`);
     });
     if (errorMessage.includes("blocked")) {

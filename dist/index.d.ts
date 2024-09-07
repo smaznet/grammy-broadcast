@@ -4,7 +4,7 @@ import { Redis } from 'ioredis';
 
 type getBroadcastChats = (botId: number, offset: number, limit: number, filter?: string) => Promise<string[] | number[]>;
 type MaybePromise<T> = T | Promise<T>;
-type setRestricted = (chatId: string, type: /*Users: */ 'block' | 'deactivated' | /*Groups: */ 'banned' | 'restricted') => Promise<void>;
+type setRestricted = (botId: number, chatId: string, type: /*Users: */ 'block' | 'deactivated' | /*Groups: */ 'banned' | 'restricted') => Promise<void>;
 type progressCallback = (id: string, sent: number, error: number, total: number) => void;
 interface BroadcastOptions {
     redisInstance: Redis;
