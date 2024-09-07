@@ -4,7 +4,7 @@ import {Api, Context} from "grammy";
 export type OptionalKeys<T> = { [K in keyof T]-?: {} extends Pick<T, K> ? K : never }[keyof T];
 export type Defaults<T> = Required<Pick<T, OptionalKeys<T>>>
 
-export type getBroadcastChats = (offset: number, limit: number, filter?: string) => Promise<string[] | number[]>
+export type getBroadcastChats = (botId: number, offset: number, limit: number, filter?: string) => Promise<string[] | number[]>
 
 // because of redis hgetall return type of all fields is string
 export interface BroadcastInfo {

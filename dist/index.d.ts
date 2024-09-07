@@ -2,7 +2,7 @@ import * as grammy from 'grammy';
 import { Context, Api } from 'grammy';
 import { Redis } from 'ioredis';
 
-type getBroadcastChats = (offset: number, limit: number, filter?: string) => Promise<string[] | number[]>;
+type getBroadcastChats = (botId: number, offset: number, limit: number, filter?: string) => Promise<string[] | number[]>;
 type MaybePromise<T> = T | Promise<T>;
 type setRestricted = (chatId: string, type: /*Users: */ 'block' | 'deactivated' | /*Groups: */ 'banned' | 'restricted') => Promise<void>;
 type progressCallback = (id: string, sent: number, error: number, total: number) => void;
