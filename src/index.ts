@@ -1,4 +1,3 @@
-import {Api, Bot, Context, RawApi} from "grammy";
 import {BroadcastOptions, Defaults} from "./types";
 
 import {getMiddleware} from "./middleware";
@@ -20,9 +19,33 @@ const defaultOptions: Defaults<BroadcastOptions> = {
     }
 }
 
-export function initBroadcaster<T extends Context,G extends Api<RawApi>>(bot: Bot<T,G>, options: Omit<BroadcastOptions, 'api'>) {
+class Broadcaster {
+    static _instance?: Broadcaster;
+
+    private constructor(private options: BroadcastOptions) {
+
+    }
+
+    static getInstance(options: BroadcastOptions) {
+        if (Broadcaster._instance) {
+            return Broadcaster._instance;
+        }
+        let instance = new Broadcaster(options);
+        const queue = new BroadcastQueue(options);
+        queue.checkBroadcasts().then(() => {
+        });
+        Broadcaster._instance = instance;
+    }
+
+    getMiddleware() {
+        return getMiddleware(this.options);
+    }
+
+
+}
+
+export function createBroadcaster(options: BroadcastOptions) {
     const allOptions = {
-        api: bot.api,
         ...defaultOptions,
         cmds: {
             ...defaultOptions.cmds,
@@ -30,10 +53,5 @@ export function initBroadcaster<T extends Context,G extends Api<RawApi>>(bot: Bo
         },
         ...options
     }
-    if (options.isMainInstance) {
-        const queue = new BroadcastQueue(allOptions);
-        queue.checkBroadcasts().then(() => {
-        });
-    }
-    bot.use(getMiddleware(allOptions));
+    return Broadcaster.getInstance(allOptions);
 }

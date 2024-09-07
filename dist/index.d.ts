@@ -1,4 +1,5 @@
-import { Api, Context, RawApi, Bot } from 'grammy';
+import * as grammy from 'grammy';
+import { Context, Api } from 'grammy';
 import { Redis } from 'ioredis';
 
 type getBroadcastChats = (offset: number, limit: number, filter?: string) => Promise<string[] | number[]>;
@@ -7,13 +8,13 @@ type setRestricted = (chatId: string, type: /*Users: */ 'block' | 'deactivated' 
 type progressCallback = (id: string, sent: number, error: number, total: number) => void;
 interface BroadcastOptions {
     redisInstance: Redis;
-    api: Api;
     getBroadcastChats: getBroadcastChats;
     setRestricted?: setRestricted | null;
     chunkSize?: number;
     keyPrefix?: string;
     sudoUsers: number[];
     hasPermission?: (ctx: Context) => MaybePromise<boolean>;
+    getApi: (botId: number) => MaybePromise<Api>;
     isMainInstance: boolean;
     reportFrequency?: number;
     checkQueueInterval?: number;
@@ -26,6 +27,13 @@ interface BroadcastOptions {
     };
 }
 
-declare function initBroadcaster<T extends Context, G extends Api<RawApi>>(bot: Bot<T, G>, options: Omit<BroadcastOptions, 'api'>): void;
+declare class Broadcaster {
+    private options;
+    static _instance?: Broadcaster;
+    private constructor();
+    static getInstance(options: BroadcastOptions): Broadcaster;
+    getMiddleware(): grammy.Composer<grammy.Context>;
+}
+declare function createBroadcaster(options: BroadcastOptions): Broadcaster;
 
-export { initBroadcaster };
+export { createBroadcaster };

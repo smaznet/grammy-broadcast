@@ -60,6 +60,7 @@ export function getMiddleware(options: BroadcastOptions) {
             id: brdId,
             error: '0',
             sent: '0',
+            botId: ctx.me.id,
             total: '-1'
         });
         return ctx.reply(`

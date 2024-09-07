@@ -76,6 +76,7 @@ export class BroadcastQueue {
             return;
         }
         let error = +broadcastInfo.error!;
+        let api = await this.options.getApi(+broadcastInfo.botId);
 
         let percent = (error + (+broadcastInfo.sent!) / +broadcastInfo.total!);
         let replyMarkup = new InlineKeyboard()
@@ -86,13 +87,13 @@ export class BroadcastQueue {
 
         let progressText = buildProgressText(error, +broadcastInfo.sent!, +broadcastInfo.total!);
         if (finished) {
-            await this.options.api.sendMessage(broadcastInfo.chat_id, `✅ Broadcast finished
+            await api.sendMessage(broadcastInfo.chat_id, `✅ Broadcast finished
 ${progressText}`);
             return;
         }
         let msgId = this.reportIds[broadcastInfo.id];
         if (!msgId) {
-            await this.options.api.sendMessage(broadcastInfo.chat_id, `✅ Broadcast Started
+            await api.sendMessage(broadcastInfo.chat_id, `✅ Broadcast Started
 ${progressText}`, {
                 reply_markup: replyMarkup
             });
@@ -101,7 +102,7 @@ ${progressText}`, {
             if (lastReport && Date.now() - lastReport.getTime() < this.options.reportFrequency!) {
                 return;
             }
-            await this.options.api.editMessageText(broadcastInfo.chat_id, msgId, `⌛ Broadcasting
+            await api.editMessageText(broadcastInfo.chat_id, msgId, `⌛ Broadcasting
 ${progressText}`, {
                 reply_markup: replyMarkup
             });
@@ -112,13 +113,14 @@ ${progressText}`, {
 
     async sendToChat(chatId: string, broadcastInfo: BroadcastInfo): Promise<boolean> {
         let msgIds = broadcastInfo.message_ids?.split('_').map((e) => parseInt(e));
+        let api = await this.options.getApi(+broadcastInfo.botId);
         try {
             if (broadcastInfo.type === 'text') {
-                await this.options.api.sendMessage(chatId, broadcastInfo.text!);
+                await api.sendMessage(chatId, broadcastInfo.text!);
             } else if (broadcastInfo.type === 'forward') {
-                await this.options.api.forwardMessages(chatId, broadcastInfo.chat_id, msgIds!);
+                await api.forwardMessages(chatId, broadcastInfo.chat_id, msgIds!);
             } else if (broadcastInfo.type === 'copy') {
-                await this.options.api.copyMessages(chatId, broadcastInfo.chat_id, msgIds!);
+                await api.copyMessages(chatId, broadcastInfo.chat_id, msgIds!);
             }
             if (this.waitTime) {
                 await sleep(this.waitTime);

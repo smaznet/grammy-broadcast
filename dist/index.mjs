@@ -77,6 +77,7 @@ function getMiddleware(options) {
       id: brdId,
       error: "0",
       sent: "0",
+      botId: ctx.me.id,
       total: "-1"
     });
     return ctx.reply(`
@@ -266,17 +267,18 @@ var BroadcastQueue = class {
       return;
     }
     let error = +broadcastInfo.error;
+    let api = await this.options.getApi(+broadcastInfo.botId);
     let percent = error + +broadcastInfo.sent / +broadcastInfo.total;
     let replyMarkup = new InlineKeyboard2().text(buildProgressBtnText(percent), `brd:progress:${broadcastInfo.id}`).row().text("Pause", `brd:pause:${broadcastInfo.id}`).text("Stop", `brd:stop:${broadcastInfo.id}`);
     let progressText = buildProgressText(error, +broadcastInfo.sent, +broadcastInfo.total);
     if (finished) {
-      await this.options.api.sendMessage(broadcastInfo.chat_id, `\u2705 Broadcast finished
+      await api.sendMessage(broadcastInfo.chat_id, `\u2705 Broadcast finished
 ${progressText}`);
       return;
     }
     let msgId = this.reportIds[broadcastInfo.id];
     if (!msgId) {
-      await this.options.api.sendMessage(broadcastInfo.chat_id, `\u2705 Broadcast Started
+      await api.sendMessage(broadcastInfo.chat_id, `\u2705 Broadcast Started
 ${progressText}`, {
         reply_markup: replyMarkup
       });
@@ -285,7 +287,7 @@ ${progressText}`, {
       if (lastReport && Date.now() - lastReport.getTime() < this.options.reportFrequency) {
         return;
       }
-      await this.options.api.editMessageText(broadcastInfo.chat_id, msgId, `\u231B Broadcasting
+      await api.editMessageText(broadcastInfo.chat_id, msgId, `\u231B Broadcasting
 ${progressText}`, {
         reply_markup: replyMarkup
       });
@@ -294,13 +296,14 @@ ${progressText}`, {
   async sendToChat(chatId, broadcastInfo) {
     var _a;
     let msgIds = (_a = broadcastInfo.message_ids) == null ? void 0 : _a.split("_").map((e) => parseInt(e));
+    let api = await this.options.getApi(+broadcastInfo.botId);
     try {
       if (broadcastInfo.type === "text") {
-        await this.options.api.sendMessage(chatId, broadcastInfo.text);
+        await api.sendMessage(chatId, broadcastInfo.text);
       } else if (broadcastInfo.type === "forward") {
-        await this.options.api.forwardMessages(chatId, broadcastInfo.chat_id, msgIds);
+        await api.forwardMessages(chatId, broadcastInfo.chat_id, msgIds);
       } else if (broadcastInfo.type === "copy") {
-        await this.options.api.copyMessages(chatId, broadcastInfo.chat_id, msgIds);
+        await api.copyMessages(chatId, broadcastInfo.chat_id, msgIds);
       }
       if (this.waitTime) {
         await sleep(this.waitTime);
@@ -363,9 +366,27 @@ var defaultOptions = {
     addmsg: "addmsg"
   }
 };
-function initBroadcaster(bot, options) {
+var Broadcaster = class _Broadcaster {
+  constructor(options) {
+    this.options = options;
+  }
+  static _instance;
+  static getInstance(options) {
+    if (_Broadcaster._instance) {
+      return _Broadcaster._instance;
+    }
+    let instance = new _Broadcaster(options);
+    const queue = new BroadcastQueue(options);
+    queue.checkBroadcasts().then(() => {
+    });
+    _Broadcaster._instance = instance;
+  }
+  getMiddleware() {
+    return getMiddleware(this.options);
+  }
+};
+function createBroadcaster(options) {
   const allOptions = {
-    api: bot.api,
     ...defaultOptions,
     cmds: {
       ...defaultOptions.cmds,
@@ -373,14 +394,9 @@ function initBroadcaster(bot, options) {
     },
     ...options
   };
-  if (options.isMainInstance) {
-    const queue = new BroadcastQueue(allOptions);
-    queue.checkBroadcasts().then(() => {
-    });
-  }
-  bot.use(getMiddleware(allOptions));
+  return Broadcaster.getInstance(allOptions);
 }
 export {
-  initBroadcaster
+  createBroadcaster
 };
 //# sourceMappingURL=index.mjs.map

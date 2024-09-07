@@ -11,6 +11,7 @@ export interface BroadcastInfo {
     paused?: string,
     user_id: string,
     id: string,
+    botId: string,
     sent?: string,
     error?: string,
     total?: string,
@@ -30,7 +31,6 @@ export type progressCallback = (id: string, sent: number, error: number, total: 
 export interface BroadcastOptions {
     // we use redis because of fast and easy to use for pause and stop the broadcast
     redisInstance: Redis,
-    api: Api,
     // we need a callback for getting chats
     getBroadcastChats: getBroadcastChats,
     // set chat restricted
@@ -42,6 +42,7 @@ export interface BroadcastOptions {
     // list of sudo users which can use /broadcast command if its empty you should use your own guard
     sudoUsers: number[],
     hasPermission?: (ctx: Context) => MaybePromise<boolean>;
+    getApi: (botId: number) => MaybePromise<Api>,
     // in case of using worker or cluster if its main instance pass true to init queue in this instance
     isMainInstance: boolean,
     reportFrequency?: number,
