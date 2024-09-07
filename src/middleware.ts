@@ -1,14 +1,24 @@
-import {Composer, InlineKeyboard} from "grammy";
+import {Composer, Context, InlineKeyboard} from "grammy";
 import {BroadcastOptions} from "./types";
 import {buildProgressText} from "./utils";
 
 export function getMiddleware(options: BroadcastOptions) {
-    const broadcastMiddleware = options.sudoUsers?.length ? new Composer().filter((ctx) => {
-        if (ctx.from?.id) {
-            return options.sudoUsers.includes(ctx.from.id)
-        }
-        return false;
-    }) : new Composer();
+    const middleware = new Composer();
+
+
+    let broadcastMiddleware: Composer<Context>;
+    if (options.sudoUsers?.length) {
+        broadcastMiddleware = middleware.filter((ctx) => {
+            if (ctx.from?.id) {
+                return options.sudoUsers.includes(ctx.from.id)
+            }
+            return false;
+        })
+    } else if (typeof options.hasPermission === 'function') {
+        broadcastMiddleware = middleware.filter(options.hasPermission)
+    } else {
+        broadcastMiddleware = middleware;
+    }
     broadcastMiddleware.command([options.cmds.broadcast, options.cmds.copy, options.cmds.forward], async (ctx) => {
         let [command, ...args] = ctx.message!.text.substring(1).split(' ');
         let type: string;
@@ -171,7 +181,7 @@ Messages Count ${currentIds.length}`, {
         return ctx.editMessageText('Broadcast stopped');
     });
 
-    return broadcastMiddleware;
+    return middleware;
 }
 
 

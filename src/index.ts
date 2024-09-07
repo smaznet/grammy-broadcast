@@ -11,6 +11,7 @@ const defaultOptions: Defaults<BroadcastOptions> = {
     progressCallback: null,
     setRestricted: null,
     checkQueueInterval: 60 * 1000,
+    hasPermission: null,
     cmds: {
         broadcast: 'broadcast',
         copy: 'copy',
@@ -19,9 +20,9 @@ const defaultOptions: Defaults<BroadcastOptions> = {
     }
 }
 
-export function initBroadcaster(api: Api, options: Omit<BroadcastOptions, 'api'>) {
+export function initBroadcaster(bot: Bot, options: Omit<BroadcastOptions, 'api'>) {
     const allOptions = {
-        api: api,
+        api: bot.api,
         ...defaultOptions,
         cmds: {
             ...defaultOptions.cmds,
@@ -34,7 +35,5 @@ export function initBroadcaster(api: Api, options: Omit<BroadcastOptions, 'api'>
         queue.checkBroadcasts().then(() => {
         });
     }
-
-    return (getMiddleware(allOptions));
-
+    bot.use(getMiddleware(allOptions));
 }

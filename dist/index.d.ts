@@ -1,8 +1,8 @@
-import * as grammy from 'grammy';
-import { Api } from 'grammy';
+import { Api, Context, Bot } from 'grammy';
 import { Redis } from 'ioredis';
 
 type getBroadcastChats = (offset: number, limit: number, filter?: string) => Promise<string[] | number[]>;
+type MaybePromise<T> = T | Promise<T>;
 type setRestricted = (chatId: string, type: /*Users: */ 'block' | 'deactivated' | /*Groups: */ 'banned' | 'restricted') => Promise<void>;
 type progressCallback = (id: string, sent: number, error: number, total: number) => void;
 interface BroadcastOptions {
@@ -13,6 +13,7 @@ interface BroadcastOptions {
     chunkSize?: number;
     keyPrefix?: string;
     sudoUsers: number[];
+    hasPermission?: (ctx: Context) => MaybePromise<boolean>;
     isMainInstance: boolean;
     reportFrequency?: number;
     checkQueueInterval?: number;
@@ -25,6 +26,6 @@ interface BroadcastOptions {
     };
 }
 
-declare function initBroadcaster(api: Api, options: Omit<BroadcastOptions, 'api'>): grammy.Composer<grammy.Context>;
+declare function initBroadcaster(bot: Bot, options: Omit<BroadcastOptions, 'api'>): void;
 
 export { initBroadcaster };

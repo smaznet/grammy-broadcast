@@ -21,13 +21,21 @@ function buildProgressText(error, sent, total) {
 // src/middleware.ts
 function getMiddleware(options) {
   var _a;
-  const broadcastMiddleware = ((_a = options.sudoUsers) == null ? void 0 : _a.length) ? new (0, _grammy.Composer)().filter((ctx) => {
-    var _a2;
-    if ((_a2 = ctx.from) == null ? void 0 : _a2.id) {
-      return options.sudoUsers.includes(ctx.from.id);
-    }
-    return false;
-  }) : new (0, _grammy.Composer)();
+  const middleware = new (0, _grammy.Composer)();
+  let broadcastMiddleware;
+  if ((_a = options.sudoUsers) == null ? void 0 : _a.length) {
+    broadcastMiddleware = middleware.filter((ctx) => {
+      var _a2;
+      if ((_a2 = ctx.from) == null ? void 0 : _a2.id) {
+        return options.sudoUsers.includes(ctx.from.id);
+      }
+      return false;
+    });
+  } else if (typeof options.hasPermission === "function") {
+    broadcastMiddleware = middleware.filter(options.hasPermission);
+  } else {
+    broadcastMiddleware = middleware;
+  }
   broadcastMiddleware.command([options.cmds.broadcast, options.cmds.copy, options.cmds.forward], async (ctx) => {
     var _a2;
     let [command, ...args] = ctx.message.text.substring(1).split(" ");
@@ -166,7 +174,7 @@ Messages Count ${currentIds.length}`, {
     await options.redisInstance.lrem(options.keyPrefix + "list", 1, id);
     return ctx.editMessageText("Broadcast stopped");
   });
-  return broadcastMiddleware;
+  return middleware;
 }
 
 // src/broadcast.queue.ts
@@ -346,6 +354,7 @@ var defaultOptions = {
   progressCallback: null,
   setRestricted: null,
   checkQueueInterval: 60 * 1e3,
+  hasPermission: null,
   cmds: {
     broadcast: "broadcast",
     copy: "copy",
@@ -353,9 +362,9 @@ var defaultOptions = {
     addmsg: "addmsg"
   }
 };
-function initBroadcaster(api, options) {
+function initBroadcaster(bot, options) {
   const allOptions = {
-    api,
+    api: bot.api,
     ...defaultOptions,
     cmds: {
       ...defaultOptions.cmds,
@@ -368,7 +377,7 @@ function initBroadcaster(api, options) {
     queue.checkBroadcasts().then(() => {
     });
   }
-  return getMiddleware(allOptions);
+  bot.use(getMiddleware(allOptions));
 }
 
 

@@ -1,5 +1,5 @@
 import {Redis} from "ioredis";
-import {Api} from "grammy";
+import {Api, Context} from "grammy";
 
 export type OptionalKeys<T> = { [K in keyof T]-?: {} extends Pick<T, K> ? K : never }[keyof T];
 export type Defaults<T> = Required<Pick<T, OptionalKeys<T>>>
@@ -23,6 +23,7 @@ export interface BroadcastInfo {
 
 }
 
+type MaybePromise<T> = T | Promise<T>;
 export type setRestricted = (chatId: string, type: /*Users: */ 'block' | 'deactivated' | /*Groups: */ 'banned' | 'restricted') => Promise<void>
 export type progressCallback = (id: string, sent: number, error: number, total: number) => void;
 
@@ -40,6 +41,7 @@ export interface BroadcastOptions {
     keyPrefix?: string,
     // list of sudo users which can use /broadcast command if its empty you should use your own guard
     sudoUsers: number[],
+    hasPermission?: (ctx: Context) => MaybePromise<boolean>;
     // in case of using worker or cluster if its main instance pass true to init queue in this instance
     isMainInstance: boolean,
     reportFrequency?: number,
