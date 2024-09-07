@@ -78,7 +78,7 @@ export class BroadcastQueue {
         let error = +broadcastInfo.error!;
         let api = await this.options.getApi(+broadcastInfo.botId);
 
-        let percent = (error + (+broadcastInfo.sent!) / +broadcastInfo.total!);
+        let percent = ((error + (+broadcastInfo.sent!)) / +broadcastInfo.total!);
         let replyMarkup = new InlineKeyboard()
             .text(buildProgressBtnText(percent,), `brd:progress:${broadcastInfo.id}`)
             .row()

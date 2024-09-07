@@ -268,7 +268,7 @@ var BroadcastQueue = (_class = class {
     }
     let error = +broadcastInfo.error;
     let api = await this.options.getApi(+broadcastInfo.botId);
-    let percent = error + +broadcastInfo.sent / +broadcastInfo.total;
+    let percent = (error + +broadcastInfo.sent) / +broadcastInfo.total;
     let replyMarkup = new (0, _grammy.InlineKeyboard)().text(buildProgressBtnText(percent), `brd:progress:${broadcastInfo.id}`).row().text("Pause", `brd:pause:${broadcastInfo.id}`).text("Stop", `brd:stop:${broadcastInfo.id}`);
     let progressText = buildProgressText(error, +broadcastInfo.sent, +broadcastInfo.total);
     if (finished) {
