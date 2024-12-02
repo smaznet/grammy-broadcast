@@ -93,11 +93,11 @@ ${progressText}`);
         }
         let msgId = this.reportIds[broadcastInfo.id];
         if (!msgId) {
-            await api.sendMessage(broadcastInfo.chat_id, `✅ Broadcast Started
+            let msg = await api.sendMessage(broadcastInfo.chat_id, `✅ Broadcast Started
 ${progressText}`, {
                 reply_markup: replyMarkup
             });
-            this.reportIds[broadcastInfo.id] = msgId;
+            this.reportIds[broadcastInfo.id] = msg.message_id;
         } else {
             let lastReport = this.lastReports[broadcastInfo.id];
             if (lastReport && Date.now() - lastReport.getTime() < this.options.reportFrequency!) {
