@@ -97,6 +97,7 @@ ${progressText}`);
 ${progressText}`, {
                 reply_markup: replyMarkup
             });
+            this.reportIds[broadcastInfo.id] = msgId;
         } else {
             let lastReport = this.lastReports[broadcastInfo.id];
             if (lastReport && Date.now() - lastReport.getTime() < this.options.reportFrequency!) {
