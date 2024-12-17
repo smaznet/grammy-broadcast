@@ -21,11 +21,12 @@ export interface BroadcastInfo {
     text?: string,
     chatOffset?: string
     chatFilter: string,
+    pin?: string;
 
 }
 
 type MaybePromise<T> = T | Promise<T>;
-export type setRestricted = (botId: number,chatId: string, type: /*Users: */ 'block' | 'deactivated' | /*Groups: */ 'banned' | 'restricted') => Promise<void>
+export type setRestricted = (botId: number, chatId: string, type: /*Users: */ 'block' | 'deactivated' | /*Groups: */ 'banned' | 'restricted') => Promise<void>
 export type progressCallback = (id: string, sent: number, error: number, total: number) => void;
 
 export interface BroadcastOptions {

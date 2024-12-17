@@ -116,12 +116,19 @@ ${progressText}`, {
         let msgIds = broadcastInfo.message_ids?.split('_').map((e) => parseInt(e));
         let api = await this.options.getApi(+broadcastInfo.botId);
         try {
+            let msgId;
             if (broadcastInfo.type === 'text') {
-                await api.sendMessage(chatId, broadcastInfo.text!);
+                let msg = await api.sendMessage(chatId, broadcastInfo.text!);
+                msgId = msg.message_id;
             } else if (broadcastInfo.type === 'forward') {
-                await api.forwardMessages(chatId, broadcastInfo.chat_id, msgIds!);
+                let msgs = await api.forwardMessages(chatId, broadcastInfo.chat_id, msgIds!);
+                msgId = msgs.pop().message_id;
             } else if (broadcastInfo.type === 'copy') {
-                await api.copyMessages(chatId, broadcastInfo.chat_id, msgIds!);
+                let msgs = await api.copyMessages(chatId, broadcastInfo.chat_id, msgIds!);
+                msgId = msgs.pop().message_id;
+            }
+            if (broadcastInfo.pin ) {
+                await api.pinChatMessage(chatId, msgId, {disable_notification: true});
             }
             if (this.waitTime) {
                 await sleep(this.waitTime);
