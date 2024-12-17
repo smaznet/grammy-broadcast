@@ -165,9 +165,15 @@ Messages Count ${currentIds.length}`, {
         let info = await options.redisInstance.hgetall(options.keyPrefix + 'info:' + ctx.match[1]);
         let messageIds = info.message_ids.split('_').map((e: string) => Number.parseInt(e));
         if (info.type === 'copy') {
-            return ctx.copyMessages(info.chat_id, messageIds)
+            let msgs = await ctx.copyMessages(info.chat_id, messageIds)
+            if (info.pin) {
+                await ctx.pinChatMessage(msgs.pop().message_id)
+            }
         } else if (info.type === 'forward') {
-            return ctx.forwardMessages(info.chat_id, messageIds)
+            let msgs = await ctx.forwardMessages(info.chat_id, messageIds)
+            if (info.pin) {
+                await ctx.pinChatMessage(msgs.pop().message_id)
+            }
         }
     });
     broadcastMiddleware.callbackQuery(/brd:start:(\w+)/, async (ctx) => {
