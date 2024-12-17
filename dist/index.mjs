@@ -87,7 +87,7 @@ for send multi message in this broadcast reply this command to another message
 <code>/${options.cmds.addmsg} ${brdId}</code>
 `, {
       parse_mode: "HTML",
-      reply_markup: new InlineKeyboard().text("Preview", "brd:preview:" + brdId).row().text("Start", "brd:start:" + brdId).text("Cancel", "brd:stop:" + brdId)
+      reply_markup: new InlineKeyboard().text("Preview", "brd:preview:" + brdId).text("Pin", `brd:pin:${brdId}`).row().text("Start", "brd:start:" + brdId).text("Cancel", "brd:stop:" + brdId)
     });
   });
   broadcastMiddleware.command(options.cmds.addmsg, async (ctx) => {
@@ -111,10 +111,11 @@ for send multi message in this broadcast reply this command to another message
     }
     currentIds.push(newMsgId);
     await options.redisInstance.hset(options.keyPrefix + "info:" + brdId, "message_ids", currentIds.join("_"));
+    let isPin = await options.redisInstance.hget(options.keyPrefix + "info:" + brdId, "pin");
     return ctx.reply(`Message added to queue
 
 Messages Count ${currentIds.length}`, {
-      reply_markup: new InlineKeyboard().text("Preview", "brd:preview:" + brdId).row().text("Start", "brd:start:" + brdId).text("Cancel", "brd:stop:" + brdId)
+      reply_markup: new InlineKeyboard().text("Preview", "brd:preview:" + brdId).text(`Pin${isPin ? " \u2705" : ""}`, `brd:pin:${brdId}`).row().text("Start", "brd:start:" + brdId).text("Cancel", "brd:stop:" + brdId)
     });
   });
   broadcastMiddleware.callbackQuery(/brd:progress:(\w+)/, async (ctx) => {
@@ -140,6 +141,18 @@ Messages Count ${currentIds.length}`, {
         reply_markup: new InlineKeyboard().text("Pause", "brd:pause:" + ctx.match[1]).text("Stop", "brd:stop:" + ctx.match[1])
       }
     );
+  });
+  broadcastMiddleware.callbackQuery(/brd:pin:(\w+)/, async (ctx) => {
+    let brdId = ctx.match[1];
+    let isPin = await options.redisInstance.hget(options.keyPrefix + "info:" + brdId, "pin");
+    if (isPin) {
+      await options.redisInstance.hdel(options.keyPrefix + "info:" + brdId, "pin");
+    } else {
+      await options.redisInstance.hset(options.keyPrefix + "info:" + brdId, "pin", "1");
+    }
+    return ctx.editMessageReplyMarkup({
+      reply_markup: new InlineKeyboard().text("Preview", "brd:preview:" + brdId).text(`Pin${!isPin ? " \u2705" : ""}`, `brd:pin:${brdId}`).row().text("Start", "brd:start:" + brdId).text("Cancel", "brd:stop:" + brdId)
+    });
   });
   broadcastMiddleware.callbackQuery(/brd:preview:(\w+)/, async (ctx) => {
     let info = await options.redisInstance.hgetall(options.keyPrefix + "info:" + ctx.match[1]);
@@ -299,12 +312,19 @@ ${progressText}`, {
     let msgIds = (_a = broadcastInfo.message_ids) == null ? void 0 : _a.split("_").map((e) => parseInt(e));
     let api = await this.options.getApi(+broadcastInfo.botId);
     try {
+      let msgId;
       if (broadcastInfo.type === "text") {
-        await api.sendMessage(chatId, broadcastInfo.text);
+        let msg = await api.sendMessage(chatId, broadcastInfo.text);
+        msgId = msg.message_id;
       } else if (broadcastInfo.type === "forward") {
-        await api.forwardMessages(chatId, broadcastInfo.chat_id, msgIds);
+        let msgs = await api.forwardMessages(chatId, broadcastInfo.chat_id, msgIds);
+        msgId = msgs.pop().message_id;
       } else if (broadcastInfo.type === "copy") {
-        await api.copyMessages(chatId, broadcastInfo.chat_id, msgIds);
+        let msgs = await api.copyMessages(chatId, broadcastInfo.chat_id, msgIds);
+        msgId = msgs.pop().message_id;
+      }
+      if (broadcastInfo.pin) {
+        await api.pinChatMessage(chatId, msgId, { disable_notification: true });
       }
       if (this.waitTime) {
         await sleep(this.waitTime);
