@@ -127,7 +127,7 @@ ${progressText}`, {
                 let msgs = await api.copyMessages(chatId, broadcastInfo.chat_id, msgIds!);
                 msgId = msgs.pop().message_id;
             }
-            if (broadcastInfo.pin ) {
+            if (broadcastInfo.pin) {
                 await api.pinChatMessage(chatId, msgId, {disable_notification: true});
             }
             if (this.waitTime) {
@@ -146,34 +146,44 @@ ${progressText}`, {
     }
 
     async handleError(botId: number, chatId: string, error: Error | GrammyError): Promise<boolean> {
-        const message = 'description' in error ? error.description : error.message;
-        const errorMessage = (message).toLowerCase();
-        const setRestricted = this.options.setRestricted?.bind(null, botId, chatId) || ((reason) => {
-            console.log(`ChatId: ${chatId} is restricted for reason: ${reason} you didn't handled this error`);
-        });
-        if (errorMessage.includes('blocked')) {
-            setRestricted('block');
-        }
-        if (errorMessage.includes('deactivated')) {
-            setRestricted('deactivated');
-        }
-        if (errorMessage.includes('kicked')) {
-            setRestricted('banned');
-        }
-        if (errorMessage.includes('restricted')) {
-            setRestricted('restricted');
-        }
-        if ('parameters' in error) {
-            if (error.parameters.retry_after) {
-                await sleep(
-                    error.parameters.retry_after * 1000
-                )
-                this.waitTime += 100;
-                // why we reached limits?
-                // in that case we add some sleep to requests
-                return true;
+        try {
+            const message = 'description' in error ? error.description : error.message;
+            const errorMessage = (message).toLowerCase();
+            const setRestricted = this.options.setRestricted?.bind(null, botId, chatId) || ((reason) => {
+                console.log(`ChatId: ${chatId} is restricted for reason: ${reason} you didn't handled this error`);
+            });
+            if (errorMessage.includes('blocked')) {
+                setRestricted('block');
             }
+            if (errorMessage.includes('deactivated')) {
+                setRestricted('deactivated');
+            }
+            if (errorMessage.includes('kicked')) {
+                setRestricted('banned');
+            }
+            if (errorMessage.includes('restricted')) {
+                setRestricted('restricted');
+            }
+            if (errorMessage.includes('initiate conversation')) {
+                setRestricted('no-conv')
+            }
+            if ('parameters' in error) {
+                if (error.parameters.retry_after) {
+                    console.log(`we limited for ${error.parameters.retry_after} secs`)
+                    await sleep(
+                        error.parameters.retry_after * 1000
+                    )
+                    this.waitTime += 100;
+                    // why we reached limits?
+                    // in that case we add some sleep to requests
+                    return true;
+                }
+            }
+        } catch (err) {
+            console.log("HandlerError error: ", err);
+        } finally {
         }
+
         // todo: more errors
         return false;
     }

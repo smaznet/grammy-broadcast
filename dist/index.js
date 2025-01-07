@@ -347,31 +347,40 @@ ${progressText}`, {
   }
   async handleError(botId, chatId, error) {
     var _a;
-    const message = "description" in error ? error.description : error.message;
-    const errorMessage = message.toLowerCase();
-    const setRestricted = ((_a = this.options.setRestricted) == null ? void 0 : _a.bind(null, botId, chatId)) || ((reason) => {
-      console.log(`ChatId: ${chatId} is restricted for reason: ${reason} you didn't handled this error`);
-    });
-    if (errorMessage.includes("blocked")) {
-      setRestricted("block");
-    }
-    if (errorMessage.includes("deactivated")) {
-      setRestricted("deactivated");
-    }
-    if (errorMessage.includes("kicked")) {
-      setRestricted("banned");
-    }
-    if (errorMessage.includes("restricted")) {
-      setRestricted("restricted");
-    }
-    if ("parameters" in error) {
-      if (error.parameters.retry_after) {
-        await sleep(
-          error.parameters.retry_after * 1e3
-        );
-        this.waitTime += 100;
-        return true;
+    try {
+      const message = "description" in error ? error.description : error.message;
+      const errorMessage = message.toLowerCase();
+      const setRestricted = ((_a = this.options.setRestricted) == null ? void 0 : _a.bind(null, botId, chatId)) || ((reason) => {
+        console.log(`ChatId: ${chatId} is restricted for reason: ${reason} you didn't handled this error`);
+      });
+      if (errorMessage.includes("blocked")) {
+        setRestricted("block");
       }
+      if (errorMessage.includes("deactivated")) {
+        setRestricted("deactivated");
+      }
+      if (errorMessage.includes("kicked")) {
+        setRestricted("banned");
+      }
+      if (errorMessage.includes("restricted")) {
+        setRestricted("restricted");
+      }
+      if (errorMessage.includes("initiate conversation")) {
+        setRestricted("no-conv");
+      }
+      if ("parameters" in error) {
+        if (error.parameters.retry_after) {
+          console.log(`we limited for ${error.parameters.retry_after} secs`);
+          await sleep(
+            error.parameters.retry_after * 1e3
+          );
+          this.waitTime += 100;
+          return true;
+        }
+      }
+    } catch (err) {
+      console.log("HandlerError error: ", err);
+    } finally {
     }
     return false;
   }
